@@ -21,15 +21,15 @@
                     <key>munki_repo_path</key>
                     <string>%MUNKI_REPO%</string>
                     <key>airwatch_url</key>
-                    <string>%AIRWATCH_URL</string>
+                    <string>%AIRWATCH_URL%</string>
                     <key>airwatch_groupid</key>
-                    <string>%AIRWATCH_GROUPID</string>
+                    <string>%AIRWATCH_GROUPID%</string>
                     <key>api_token</key>
-                    <string>%API_TOKEN</string>
+                    <string>%API_TOKEN%</string>
                     <key>api_username</key>
-                    <string>%API_USERNAME</string>
+                    <string>%API_USERNAME%</string>
                     <key>api_password</key>
-                    <string>%API_PASSWORD</string>
+                    <string>%API_PASSWORD%</string>
                 </dict>
             </dict>
         </array>
