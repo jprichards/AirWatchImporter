@@ -104,7 +104,7 @@ class AWImportProcessor(Processor):
         for result in r.text['LocationGroups'][0]:
             if result['GroupId'] == GROUPID:
                 ogid = result['Id']['Value']
-        self.output(print 'OG ID: {}'.format(ogid))
+        self.output('OG ID: {}'.format(ogid))
 
         if filetype == 'pkg':
             # upload pkg, dmg, mpkg file (application/octet-stream)
@@ -115,7 +115,7 @@ class AWImportProcessor(Processor):
 
             res = streamFile(filepath, posturl, headers)
             pkg_id = res['Value']
-            self.output(print 'Pkg ID: {}'.format(pkg_id))
+            self.output('Pkg ID: {}'.format(pkg_id))
             return pkg_id
         elif filetype == 'pkginfo':
             # upload pkginfo plist (text/xml)
@@ -126,7 +126,7 @@ class AWImportProcessor(Processor):
 
             res = streamFile(filepath, posturl, headers)
             pkginfo_id = res['Value']
-            self.output(print 'PkgInfo ID: {}'.format(pkginfo_id))
+            self.output('PkgInfo ID: {}'.format(pkginfo_id))
             return pkginfo_id
         elif filetype == 'icon':
             # upload icon file (image/png)
@@ -137,7 +137,7 @@ class AWImportProcessor(Processor):
 
             res = streamFile(ICON_FILEPATH, posturl, headers)
             icon_id = res['Value']
-            print 'Icon ID: {}'.format(icon_id)
+            self.output('Icon ID: {}'.format(icon_id))
             return icon_id
 
 
@@ -182,10 +182,10 @@ class AWImportProcessor(Processor):
                     if item.get("Processor") == "MunkiImporter":
                         if item["Output"].get("pkginfo_repo_path"):
                             pi = item["Output"].get("pkginfo_repo_path")
-                            self.output(print awimport('pkginfo', pi))
+                            self.output(awimport('pkginfo', pi))
                         if item["Output"].get("pkg_repo_path"):
                             pkg = item["Output"].get("pkginfo_repo_path")
-                            self.output(print awimport('pkg', pkg))
+                            self.output(awimport('pkg', pkg))
 
 
 
