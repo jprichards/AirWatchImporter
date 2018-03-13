@@ -70,7 +70,7 @@ class AWImportProcessor(Processor):
         },
         "airwatch_resultcode": {
             "description": "Result code from the AW Import.",
-        }
+        },
         "airwatch_stderr": {
             "description": "Error output (if any) from the AW Import.",
         },
