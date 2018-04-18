@@ -65,11 +65,10 @@ class AWImportProcessor(Processor):
             "description": "The name of the group an app should be \
                             assigned to"
         },
-        "deployment_type": {
+        "push_mode": {
             "required": False,
             "description": "Tells AirWatch how to deploy the app, auto \
-                            or On-Demand. If not specified, On Demand is \
-                            assumed."
+                            or On-Demand."
         }
     }
     output_variables = {
