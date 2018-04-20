@@ -45,15 +45,15 @@ See this wiki for more information on shared processor:
 https://github.com/autopkg/autopkg/wiki/Processor-Locations
 
 ## Available Input Variables
-* [`munki_repo_path`]()
-* [`force_import`]()
-* [`airwatch_url`]()
-* [`airwatch_groupid`]()
-* [`api_token`]()
-* [`api_username`]()
-* [`api_password`]()
-* [`smart_group_name`]()
-* [`push_mode`]()
+* [`munki_repo_path`](https://github.com/jprichards/AirWatchImporter/wiki/munki_repo_path)
+* [`force_import`](https://github.com/jprichards/AirWatchImporter/wiki/force_import)
+* [`airwatch_url`](https://github.com/jprichards/AirWatchImporter/wiki/airwatch_url)
+* [`airwatch_groupid`](https://github.com/jprichards/AirWatchImporter/wiki/airwatch_groupid)
+* [`api_token`](https://github.com/jprichards/AirWatchImporter/wiki/api_token)
+* [`api_username`](https://github.com/jprichards/AirWatchImporter/wiki/api_username)
+* [`api_password`](https://github.com/jprichards/AirWatchImporter/wiki/api_password)
+* [`smart_group_name`](https://github.com/jprichards/AirWatchImporter/wiki/smart_group_name)
+* [`push_mode`](https://github.com/jprichards/AirWatchImporter/wiki/push_mode)
 
 ## Sample Processor
 
