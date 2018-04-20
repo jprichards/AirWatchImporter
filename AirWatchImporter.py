@@ -24,9 +24,9 @@ import subprocess
 from autopkglib import Processor, ProcessorError, get_pref
 from requests_toolbelt import StreamingIterator #dependency from requests
 
-__all__ = ["AWImportProcessor"]
+__all__ = ["AirWatchImporter"]
 
-class AWImportProcessor(Processor):
+class AirWatchImporter(Processor):
     """Uploads apps from munki repo to AirWatch"""
     input_variables = {
         "munki_repo_path": {
@@ -67,7 +67,7 @@ class AWImportProcessor(Processor):
         },
         "push_mode": {
             "required": False,
-            "description": "Tells AirWatch how to deploy the app, auto \
+            "description": "Tells AirWatch how to deploy the app, Auto \
                             or On-Demand."
         }
     }
@@ -96,14 +96,14 @@ class AWImportProcessor(Processor):
         return r.json()
 
     def awimport(self, pkg, pkg_path, pkg_info, pkg_info_path, icon, icon_path):
-        self.output("Beginning the AirWatch import process for %s" % self.env["NAME"] ) ## Add name of app being imported
+        self.output("Beginning the AirWatch import process for %s." % self.env["NAME"] ) ## Add name of app being imported
         BASEURL = self.env.get("airwatch_url")
         GROUPID = self.env.get("airwatch_groupid")
         APITOKEN = self.env.get("api_token")
         USERNAME = self.env.get("api_username")
         PASSWORD = self.env.get("api_password")
         SMARTGROUP = self.env.get("smart_group_name")
-        DEPLOYMENTTYPE = self.env.get("deployment_type")
+        PUSHMODE = self.env.get("push_mode")
 
         ## Get some global variables for later use
         app_version = self.env["munki_importer_summary_result"]["data"]["version"]
@@ -126,6 +126,7 @@ class AWImportProcessor(Processor):
         self.output('OG ID: {}'.format(ogid))
 
         if not pkg_path == None:
+            self.output("Uploading pkg...")
             # upload pkg, dmg, mpkg file (application/octet-stream)
             headers['Content-Type'] = 'application/octet-stream'
             posturl = BASEURL + '/api/mam/blobs/uploadblob?filename=' + \
@@ -138,7 +139,9 @@ class AWImportProcessor(Processor):
             #return pkg_id
         else:
             exit("Something went wrong.")
+
         if not pkg_info_path == None:
+            self.output("Uploading pkg_info...")
             # upload pkginfo plist (text/xml)
             headers['Content-Type'] = 'text/xml'
             posturl = BASEURL + '/api/mam/blobs/uploadblob?filename=' + \
@@ -151,7 +154,9 @@ class AWImportProcessor(Processor):
             #return pkginfo_id
         else:
             exit("Something went wrong.")
+
         if not icon_path == None:
+            self.output("Uploading icon...")
             # upload icon file (image/png)
             headers['Content-Type'] = 'image/png'
             posturl = BASEURL + '/api/mam/blobs/uploadblob?filename=' + \
@@ -178,6 +183,7 @@ class AWImportProcessor(Processor):
                         "isManagedInstall": True}
 
         ## Make the API call to create the App object 
+        self.output("Creating App Object in AirWatch...")
         r = requests.post(BASEURL + '/api/mam/groups/%s/macos/apps' % ogid, headers=headers, json=app_details)
 
         ## Now get the new App ID from the server
@@ -205,13 +211,13 @@ class AWImportProcessor(Processor):
                             sg_id
                           ],
                           "DeploymentParameters": {
-                            "PushMode": DEPLOYMENTTYPE
+                            "PushMode": PUSHMODE
                             }
                         }
 
         ## Make the API call to assign the App
         r = requests.post(BASEURL + '/api/mam/apps/internal/%s/assignments' % aw_app_id, headers=headers, json=app_assignment)
-
+        return "Application was successfully uploaded to AirWatch."
 
     def main(self):
         '''Rebuild Munki catalogs in repo_path'''
