@@ -1,7 +1,13 @@
 # AirWatchImporter
 AirWatchImporter is an AutoPkg Processor that can autoatically import packages into AirWAtch, as well as assign them to one or multiple smart groups, and set certain deployment options such as Push Mode.
 
-## Dependencies required
+## Dependencies
+
+### Server Side
+You _must_ be running AirWatch Console 9.3.0.0 or higher.
+
+### Client/AutoPkg Side
+
 Currently, in order to run AirWatchImporter, you must first install two Python libraries:
 
 * The `requests` library
@@ -18,6 +24,7 @@ or
 ```
 pip install requests && pip install requests_toolbelt
 ```
+
 ## AutoPkg Shared Processor
 
 As of AutoPkg 0.4.0 you can use this processor as a shared processor.
