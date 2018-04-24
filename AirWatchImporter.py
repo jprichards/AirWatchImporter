@@ -20,6 +20,7 @@ import os.path
 import plistlib
 import requests #dependency
 import subprocess
+import datetime
 
 from autopkglib import Processor, ProcessorError, get_pref
 from requests_toolbelt import StreamingIterator #dependency from requests
@@ -61,14 +62,19 @@ class AirWatchImporter(Processor):
             "description": "AirWatch API User Password",
         },
         "smart_group_name": {
-            "required": True,
-            "description": "The name of the group an app should be \
-                            assigned to"
+            "required": False,
+            "description": "The name of the group that the app should \
+                            be assigned to."
         },
         "push_mode": {
             "required": False,
             "description": "Tells AirWatch how to deploy the app, Auto \
                             or On-Demand."
+        },
+        "deployment_date": {
+            "required": False,
+            "description": "This sets the date that the deployment of \
+                            the app should begin."
         }
     }
     output_variables = {
@@ -95,6 +101,25 @@ class AirWatchImporter(Processor):
         r = requests.post(url, data=streamer, headers=headers)
         return r.json()
 
+    def convertTime(self, deployment_time):
+        if int(deployment_time) <= 23:
+            if int(deployment_time) is 24:
+                self.output("deployment_time was set to 24, changing to 0")
+                deployment_time = 0
+            else:
+                raise ProcessorError("Please enter a valid 24-hour time (i.e. between 0-23)")
+
+        today = datetime.date.today()
+        timestamp = time.strftime('%H')
+        utc_datetime = datetime.datetime.utcnow()
+        utc_datetime_formatted = utc_datetime.strftime("%H")
+        time_difference = ((int(utc_datetime_formatted) - int(timestamp)) * 60 * 60)
+        #availability_time = datetime.timedelta(hours=int(time_difference))
+        if int(utc_datetime_formatted) < int(deployment_time):
+            sec_to_add = int(((int(deployment_time) - int(timestamp)) * 60 * 60) + int(time_difference))
+        elif int(utc_datetime_formatted) > int(deployment_time):
+            sec_to_add = int(((24 - int(timestamp) + int(deployment_time)) * 60 * 60) + int(time_difference))
+
     def awimport(self, pkg, pkg_path, pkg_info, pkg_info_path, icon, icon_path):
         self.output("Beginning the AirWatch import process for %s." % self.env["NAME"] ) ## Add name of app being imported
         BASEURL = self.env.get("airwatch_url")
@@ -118,8 +143,13 @@ class AirWatchImporter(Processor):
                    'authorization': basicauth}
 
         # get OG ID from GROUPID
-        r = requests.get(BASEURL + '/api/system/groups/search?groupid=' + GROUPID, headers=headers)
-        result = r.json()
+        try:
+            r = requests.get(BASEURL + '/api/system/groups/search?groupid=' + GROUPID, headers=headers)
+            result = r.json()
+        except AttributeError:
+            raise ProcessorError('AirWatchImporter: Unable to retrieve an ID for the Organizational Group specified: %s' % GROUPID)
+        except:
+            raise ProcessorError('AirwatchImporter: Something went wrong when making the OG ID API call.')
 
         if GROUPID in result['LocationGroups'][0]['GroupId']:
             ogid = result['LocationGroups'][0]['Id']['Value']
@@ -132,13 +162,14 @@ class AirWatchImporter(Processor):
             posturl = BASEURL + '/api/mam/blobs/uploadblob?filename=' + \
                       os.path.basename(pkg_path) + '&organizationgroup=' + \
                       str(ogid) + '&moduleType=Application' # Application only for pkg/dmg upload
-
-            res = self.streamFile(pkg_path, posturl, headers)
-            pkg_id = res['Value']
-            self.output('Pkg ID: {}'.format(pkg_id))
-            #return pkg_id
+            try:
+                res = self.streamFile(pkg_path, posturl, headers)
+                pkg_id = res['Value']
+                self.output('Pkg ID: {}'.format(pkg_id))
+            except KeyError:
+                raise ProcessorError('AirWatchImporter: Something went wrong while uploading the pkg.')
         else:
-            exit("Something went wrong.")
+            raise ProcessorError('AirWatchImporter: Did not receive a pkg_path from munkiimporter.')
 
         if not pkg_info_path == None:
             self.output("Uploading pkg_info...")
@@ -147,13 +178,14 @@ class AirWatchImporter(Processor):
             posturl = BASEURL + '/api/mam/blobs/uploadblob?filename=' + \
                       os.path.basename(pkg_info_path) + '&organizationgroup=' + \
                       str(ogid) + '&moduleType=General' # General for pkginfo and icon
-
-            res = self.streamFile(pkg_info_path, posturl, headers)
-            pkginfo_id = res['Value']
-            self.output('PkgInfo ID: {}'.format(pkginfo_id))
-            #return pkginfo_id
+            try:
+                res = self.streamFile(pkg_info_path, posturl, headers)
+                pkginfo_id = res['Value']
+                self.output('PkgInfo ID: {}'.format(pkginfo_id))
+            except KeyError:
+                raise ProcessorError('AirWatchImporter: Something went wrong while uploading the pkginfo.')
         else:
-            exit("Something went wrong.")
+            raise ProcessorError('AirWatchImporter: Did not receive a pkg_info_path from munkiimporter.')
 
         if not icon_path == None:
             self.output("Uploading icon...")
@@ -162,11 +194,14 @@ class AirWatchImporter(Processor):
             posturl = BASEURL + '/api/mam/blobs/uploadblob?filename=' + \
                       os.path.basename(icon_path) + '&organizationgroup=' + \
                       str(ogid) + '&moduleType=General' # General for pkginfo and icon
-
-            res = self.streamFile(icon_path, posturl, headers)
-            icon_id = res['Value']
-            self.output('Icon ID: {}'.format(icon_id))
-            #return icon_id
+            try:
+                res = self.streamFile(icon_path, posturl, headers)
+                icon_id = res['Value']
+                self.output('Icon ID: {}'.format(icon_id))
+            except KeyError:
+                self.output('Something went wrong while uploading the icon.')
+                self.output('Continuing app object creation...')
+                pass
         else:
             icon_id = ''
 
@@ -185,15 +220,19 @@ class AirWatchImporter(Processor):
         ## Make the API call to create the App object 
         self.output("Creating App Object in AirWatch...")
         r = requests.post(BASEURL + '/api/mam/groups/%s/macos/apps' % ogid, headers=headers, json=app_details)
-
+        if not r.status_code == 200 or not r.status_code == 204:
+            raise ProcessorError('AirWatchImporter: Unable to successfully create the App Object.') 
         ## Now get the new App ID from the server
-        r = requests.get(BASEURL + '/api/mam/apps/search?locationgroupid=%s&applicationname=%s' % (ogid, app_name), headers=headers)
-        search_results = r.json()
-        for app in search_results["Application"]:
-            if app["ActualFileVersion"] == str(app_version) and app['ApplicationName'] in app_name:
-                aw_app_id = app["Id"]["Value"]
-                self.output('App ID: %s' % aw_app_id)
-                break
+        try:
+            r = requests.get(BASEURL + '/api/mam/apps/search?locationgroupid=%s&applicationname=%s' % (ogid, app_name), headers=headers)
+            search_results = r.json()
+            for app in search_results["Application"]:
+                if app["ActualFileVersion"] == str(app_version) and app['ApplicationName'] in app_name:
+                    aw_app_id = app["Id"]["Value"]
+                    self.output('App ID: %s' % aw_app_id)
+                    break
+        except AttributeError:
+            raise ProcessorError('AirWatchImporter: Unable to retrieve the App ID for the newly created app')
 
         ## Get the Smart Group ID to assign the package to
         ## we need to replace any spaces with '%20' for the API call
@@ -217,6 +256,8 @@ class AirWatchImporter(Processor):
 
         ## Make the API call to assign the App
         r = requests.post(BASEURL + '/api/mam/apps/internal/%s/assignments' % aw_app_id, headers=headers, json=app_assignment)
+        if not r.status_code == 200 or not r.status_code == 204:
+            self.output('Unable to successfully assign the app [%s] to the group [%s]' % (self.env['NAME'], SMARTGROUP))
         return "Application was successfully uploaded to AirWatch."
 
     def main(self):
