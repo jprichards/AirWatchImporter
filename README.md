@@ -1,5 +1,5 @@
 # AirWatchImporter
-AirWatchImporter is an AutoPkg Processor that can autoatically import packages into AirWAtch, as well as assign them to one or multiple smart groups, and set certain deployment options such as Push Mode.
+AirWatchImporter is an AutoPkg Processor that can automatically import packages into AirWAtch, as well as assign them to one or multiple smart groups, and set certain deployment options such as Push Mode.
 
 ## Dependencies
 
