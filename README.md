@@ -85,3 +85,51 @@ https://github.com/autopkg/autopkg/wiki/Processor-Locations
     </dict>
 </array>
 ```
+
+## Example AutoPkg Recipe
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Description</key>
+    <string>Creates a munki package, imports it into the AirWatch Admin console.</string>
+    <key>Identifier</key>
+    <string>com.blah.airwatch.Firefox_EN</string>
+    <key>Input</key>
+    <dict>
+        <key>NAME</key>
+        <string>Firefox_EN</string>
+    </dict>
+    <key>ParentRecipe</key>
+    <string>com.github.autopkg.munki.firefox-rc-en_US</string>
+    <key>MinimumVersion</key>
+    <string>0.4.0</string>
+    <key>Process</key>
+    <array>
+        <dict>
+            <key>Processor</key>
+            <string>AirWatchImporter</string>
+            <key>Arguments</key>
+            <dict>
+                <key>munki_repo_path</key>
+                <string>MUNKI_REPO_PATH_HERE</string>
+                <key>airwatch_url</key>
+                <string>AIRWATCH_URL_HERE</string>
+                <key>airwatch_groupid</key>
+                <string>GROUP_ID_HERE</string>
+                <key>api_token</key>
+                <string>API_TOKEN_HERE</string>
+                <key>api_username</key>
+                <string>API_USERNAME_HERE</string>
+                <key>api_password</key>
+                <string>API_PASSWORD_HERE</string>
+                <key>smart_group_name</key>
+                <string>SMART_GROUP_NAME</string>
+            </dict>
+        </dict>
+    </array>
+</dict>
+</plist>
+```
